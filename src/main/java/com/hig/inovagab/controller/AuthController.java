@@ -2,6 +2,7 @@ package com.hig.inovagab.controller;
 
 import com.hig.inovagab.dto.DtoAuthenticationRequest;
 import com.hig.inovagab.dto.DtoAuthenticationResponse;
+import com.hig.inovagab.dto.DtoRegisterRequest;
 import com.hig.inovagab.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<DtoAuthenticationResponse> register(@RequestBody DtoRegisterRequest request) {
+        return ResponseEntity.ok(authService.register(request));
+    }
 
     @PostMapping("/authenticate")
     public ResponseEntity<DtoAuthenticationResponse> authenticate(@RequestBody DtoAuthenticationRequest request) {
