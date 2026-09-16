@@ -23,5 +23,6 @@ public class Project {
     private Double financialReturn;
     private String description;
     private String strategyId;
+    private String managerId;
     private String results;
 }

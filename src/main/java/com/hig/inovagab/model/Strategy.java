@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Strategy {
     @Id
     private String id;
+    private String leaderId;
     private String title;
     private String category;
     private String campaign;
