@@ -4,6 +4,7 @@ import com.hig.inovagab.dto.DtoDashboardResponse;
 import com.hig.inovagab.service.DashboardService;
 import com.hig.inovagab.service.GeminiService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,11 +32,11 @@ public class DashboardController {
     public ResponseEntity<Map<String, String >> getDashboardInsights(){
         DtoDashboardResponse metrics = dashboardService.getDashboardMetrics();
 
-        String aiInsight = geminiService.generateDashInsights(metrics);
 
-        return ResponseEntity.ok(Map.of("aiInsight", aiInsight));
+        return geminiService.generateDashInsights(metrics)
+                .map(insight -> ResponseEntity.ok(Map.of("aiInsight", insight)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(Map.of("error",
+                                "Não foi possível gerar os insights no momento. Tente novamente mais tarde.")));
     }
-
-
-
 }
