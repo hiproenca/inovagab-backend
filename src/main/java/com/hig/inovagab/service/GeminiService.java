@@ -25,7 +25,7 @@ public class GeminiService {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
     private static final int MAX_ATTEMPTS = 2;
-    //private static final String FALLBACK_MESSAGE = "Nenhum modelo Gemini disponível no momento.";
+
 
     @Value("${gemini.api.base-url}")
     private String baseUrl;
@@ -45,6 +45,7 @@ public class GeminiService {
         this.restTemplate = new RestTemplate(factory);
     }
 
+
     public Optional<String> generateDashInsights(DtoDashboardResponse metrics) {
         String prompt = String.format(Locale.forLanguageTag("pt-BR"),
                 PromptConstants.DASHBOARD_INSIGHT_PROMPT,
@@ -53,7 +54,8 @@ public class GeminiService {
                 metrics.getGlobalRoiPercentage());
 
         Map<String, Object> requestBody = Map.of(
-                "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))));
+                "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))), "generationConfig",
+                Map.of("thinkingConfig", Map.of("thinkingLevel", "low")));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
