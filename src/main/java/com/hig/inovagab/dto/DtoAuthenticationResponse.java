@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DtoAuthenticationResponse {
     private String token;
+    private DtoUserResponse user;
 
 }
