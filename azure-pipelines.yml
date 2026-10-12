@@ -1,0 +1,169 @@
+# Pipeline CI/CD - InovaGAB Backend (Spring Boot + MongoDB)
+# Estágios: Build e Testes -> Imagem Docker (ACR) -> Staging -> Produção (com aprovação)
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-24.04
+
+variables:
+  azureSubscriptionConnection: 'sc-azure'   # Service connection: Azure Resource Manager
+  acrServiceConnection: 'sc-acr'            # Service connection: Docker Registry (Azure Container Registry)
+  resourceGroup: 'rg-inovagab'
+  acrName: 'acrinovagabnew'                 # nome do ACR, sem .azurecr.io
+  imageRepository: 'inovagab-backend'
+  stagingApp: 'inovagab-stg-new'            # Web App (App Service) de staging
+  productionApp: 'inovagab-prod-new'        # Web App (App Service) de produção
+  imageTag: '$(Build.BuildId)'
+
+stages:
+  # ---------------------------------------------------------------
+  # 1) BUILD + TESTES AUTOMATIZADOS
+  # ---------------------------------------------------------------
+  - stage: BuildTest
+    displayName: Build e Testes
+    jobs:
+      - job: build_test
+        displayName: Maven build + testes
+        steps:
+          - script: |
+              docker run -d --name mongo-test -p 27017:27017 mongo:7
+              for i in $(seq 1 15); do
+                docker exec mongo-test mongosh --quiet --eval "db.adminCommand('ping').ok" && break
+                sleep 2
+              done
+            displayName: Subir MongoDB para os testes
+
+          - task: Maven@4
+            displayName: mvn clean verify
+            inputs:
+              mavenPomFile: pom.xml
+              goals: clean verify
+              options: -B
+              javaHomeOption: JDKVersion
+              jdkVersionOption: '1.17'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+
+          - task: CopyFiles@2
+            displayName: Copiar o .jar gerado
+            inputs:
+              SourceFolder: target
+              Contents: '*.jar'
+              TargetFolder: $(Build.ArtifactStagingDirectory)
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publicar artefato (.jar)
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifact: jar
+
+  # ---------------------------------------------------------------
+  # 2) IMAGEM DOCKER -> AZURE CONTAINER REGISTRY (somente na main)
+  # ---------------------------------------------------------------
+  - stage: DockerBuild
+    displayName: Build e push da imagem (ACR)
+    dependsOn: BuildTest
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: docker
+        displayName: Docker build e push
+        steps:
+          - task: Docker@2
+            displayName: Build e push da imagem
+            inputs:
+              command: buildAndPush
+              containerRegistry: $(acrServiceConnection)
+              repository: $(imageRepository)
+              dockerfile: Dockerfile
+              buildContext: .
+              tags: |
+                $(imageTag)
+                latest
+
+  # ---------------------------------------------------------------
+  # 3) DEPLOY EM STAGING (Azure App Service para contêineres)
+  # ---------------------------------------------------------------
+  - stage: DeployStaging
+    displayName: Deploy em Staging
+    dependsOn: DockerBuild
+    jobs:
+      - deployment: deploy_staging
+        displayName: Deploy staging
+        environment: staging
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebAppContainer@1
+                  displayName: Deploy da imagem no App Service (staging)
+                  inputs:
+                    azureSubscription: $(azureSubscriptionConnection)
+                    appName: $(stagingApp)
+                    containers: $(acrName).azurecr.io/$(imageRepository):$(imageTag)
+
+                - task: AzureCLI@2
+                  displayName: Smoke test (staging)
+                  inputs:
+                    azureSubscription: $(azureSubscriptionConnection)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      HOST=$(az webapp show -n $(stagingApp) -g $(resourceGroup) --query defaultHostName -o tsv)
+                      echo "URL: https://$HOST"
+                      # Sem token a API responde 401/403: qualquer status entre 200 e 499 indica que a aplicação está no ar
+                      for i in $(seq 1 20); do
+                        CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://$HOST/api/projects" || true)
+                        echo "Tentativa $i: HTTP $CODE"
+                        if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 500 ]; then exit 0; fi
+                        sleep 15
+                      done
+                      echo "A aplicação não respondeu a tempo"
+                      exit 1
+
+  # ---------------------------------------------------------------
+  # 4) DEPLOY EM PRODUÇÃO (exige aprovação manual no Environment "production")
+  # ---------------------------------------------------------------
+  - stage: DeployProduction
+    displayName: Deploy em Produção
+    dependsOn: DeployStaging
+    jobs:
+      - deployment: deploy_production
+        displayName: Deploy produção
+        environment: production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebAppContainer@1
+                  displayName: Deploy da imagem no App Service (produção)
+                  inputs:
+                    azureSubscription: $(azureSubscriptionConnection)
+                    appName: $(productionApp)
+                    containers: $(acrName).azurecr.io/$(imageRepository):$(imageTag)
+
+                - task: AzureCLI@2
+                  displayName: Smoke test (produção)
+                  inputs:
+                    azureSubscription: $(azureSubscriptionConnection)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      HOST=$(az webapp show -n $(productionApp) -g $(resourceGroup) --query defaultHostName -o tsv)
+                      echo "URL: https://$HOST"
+                      for i in $(seq 1 20); do
+                        CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://$HOST/api/projects" || true)
+                        echo "Tentativa $i: HTTP $CODE"
+                        if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 500 ]; then exit 0; fi
+                        sleep 15
+                      done
+                      echo "A aplicação não respondeu a tempo"
+                      exit 1
