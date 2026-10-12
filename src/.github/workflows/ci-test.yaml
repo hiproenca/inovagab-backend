@@ -1,0 +1,30 @@
+name: Inovagab API - Testes Automatizados
+
+on:
+  push:
+    branches: [ "main","feature/*" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  qa-tests:
+    name: Build e Testes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v4
+
+      # NOVO PASSO: Subir o banco de dados antes do Java
+      - name: Subir infraestrutura (MongoDB) com Docker Compose
+        run: docker compose up -d
+
+      - name: Configurar o ambiente Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compilar o código e executar testes automatizados
+        run: mvn clean test
