@@ -20,7 +20,7 @@ public class DashboardService {
         double totalFinancialReturn = projects.stream().mapToDouble(p -> p.getFinancialReturn() != null ? p.getFinancialReturn() : 0.0).sum();
         double totalProfit = totalFinancialReturn - totalInvestment;
 
-        double globalRoiPercentage = totalProjects > 0 ? (totalProfit / totalInvestment) * 100 : 0.0;
+        double globalRoiPercentage = totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0.0;
 
 
 

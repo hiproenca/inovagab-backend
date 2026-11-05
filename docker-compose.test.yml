@@ -1,0 +1,13 @@
+# MongoDB usado apenas pelos testes automatizados (banco "inovagab_test").
+# Uso: docker compose -f docker-compose.test.yml up -d
+services:
+  mongodb-test:
+    image: mongo:7
+    container_name: inovagab-mongo-test
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12

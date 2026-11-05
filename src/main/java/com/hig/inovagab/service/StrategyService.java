@@ -1,5 +1,6 @@
 package com.hig.inovagab.service;
 
+import com.hig.inovagab.exception.ResourceNotFoundException;
 import com.hig.inovagab.model.Strategy;
 import com.hig.inovagab.model.User;
 import com.hig.inovagab.repository.StrategyRepository;
@@ -33,7 +34,7 @@ public class StrategyService {
     public Strategy getStrategyById(String id){
 
 
-        return strategyRepository.findById(id).orElseThrow(() -> new RuntimeException("Estratégia não encontrada."));
+        return strategyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Estratégia não encontrada."));
 
     }
 

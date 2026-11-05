@@ -81,6 +81,19 @@ docker-compose up --build
 --- 
 A API estará escutando na porta 8080.
 
+## 🧪 Testes Automatizados (BDD + API)
+
+A API possui uma suíte de testes **BDD (Cucumber/Gherkin)** com **testes de API (RestAssured)** que validam
+status code, corpo JSON e contrato (JSON Schema) de todos os endpoints.
+
+```bash
+./run-tests.sh        # Linux/macOS  (Windows: run-tests.cmd)
+```
+
+Relatório: `target/cucumber-reports/cucumber.html`. Documentação completa em **[TESTES.md](TESTES.md)**.
+
+---
+
 📚 Endpoints Principais
 
 Autenticação: POST /api/auth/register, POST /api/auth/authenticate

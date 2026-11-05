@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Métricas do dashboard",
+  "type": "object",
+  "properties": {
+    "totalProjects": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "totalInvestment": {
+      "type": "number",
+      "minimum": 0
+    },
+    "totalFinancialReturn": {
+      "type": "number",
+      "minimum": 0
+    },
+    "totalProfit": {
+      "type": "number"
+    },
+    "globalRoiPercentage": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "totalProjects",
+    "totalInvestment",
+    "totalFinancialReturn",
+    "totalProfit",
+    "globalRoiPercentage"
+  ],
+  "additionalProperties": false
+}

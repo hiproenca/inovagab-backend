@@ -1,5 +1,6 @@
 package com.hig.inovagab.service;
 
+import com.hig.inovagab.exception.ResourceNotFoundException;
 import com.hig.inovagab.model.Project;
 import com.hig.inovagab.model.ProjectStage;
 import com.hig.inovagab.model.ProjectStatus;
@@ -35,7 +36,7 @@ public class ProjectService {
     }
 
     public Project getProjectById(String id){
-        return projectRepository.findById(id).orElseThrow(() -> new RuntimeException("O projeto não foi encontrado"));
+        return projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("O projeto não foi encontrado."));
     }
 
     public Project updateProject(String id, Project updatedProject){

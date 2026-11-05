@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Resposta de autenticação/cadastro",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$"
+    },
+    "user": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "OPERATOR",
+            "MANAGER",
+            "LEADER"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "role"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "token",
+    "user"
+  ],
+  "additionalProperties": false
+}

@@ -1,5 +1,6 @@
 package com.hig.inovagab.service;
 
+import com.hig.inovagab.exception.ResourceNotFoundException;
 import com.hig.inovagab.model.Idea;
 import com.hig.inovagab.model.IdeaStatus;
 import com.hig.inovagab.model.User;
@@ -43,7 +44,7 @@ public class IdeaService {
 
     public Idea getIdeaById(String id) {
         return ideaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ideia não encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException("Ideia não encontrada."));
     }
 
     public Idea updateIdea(String id, Idea updatedIdea) {

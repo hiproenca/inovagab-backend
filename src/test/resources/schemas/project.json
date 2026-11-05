@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Projeto",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "PLANNING",
+        "EXECUTION",
+        "COMPLETED"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "ON_HOLD",
+        "CANCELLED"
+      ]
+    },
+    "investment": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "deadline": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "financialReturn": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "strategyId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "managerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "results": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "stage",
+    "status",
+    "investment",
+    "deadline",
+    "financialReturn",
+    "description",
+    "strategyId",
+    "managerId",
+    "results"
+  ],
+  "additionalProperties": false
+}

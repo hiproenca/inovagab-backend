@@ -4,6 +4,7 @@ import com.hig.inovagab.dto.DtoAuthenticationRequest;
 import com.hig.inovagab.dto.DtoAuthenticationResponse;
 import com.hig.inovagab.dto.DtoRegisterRequest;
 import com.hig.inovagab.dto.DtoUserResponse;
+import com.hig.inovagab.exception.EmailAlreadyRegisteredException;
 import com.hig.inovagab.model.User;
 import com.hig.inovagab.model.UserRole;
 import com.hig.inovagab.repository.UserRepository;
@@ -43,7 +44,15 @@ public class AuthService {
 
     public DtoAuthenticationResponse register(DtoRegisterRequest request) {
 
+        if (isBlank(request.getEmail()) || isBlank(request.getPassword())) {
+            throw new IllegalArgumentException("E-mail e senha são obrigatórios.");
+        }
+        if (repository.findByEmail(request.getEmail()).isPresent()) {
+            throw new EmailAlreadyRegisteredException(request.getEmail());
+        }
+
         User user = User.builder()
+                .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.OPERATOR)
@@ -68,5 +77,9 @@ public class AuthService {
                 .token(token)
                 .user(userResponse)
                 .build();
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }
